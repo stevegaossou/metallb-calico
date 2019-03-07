@@ -35,6 +35,8 @@ The goal of this experiement was to verify that this error backoff happens.
 ## Setup
 The following setup is based on the [MetalLB Minikube tutorial](https://metallb.universe.tf/tutorial/minikube/). 
 
+As long as you have [Minikube installed](https://kubernetes.io/docs/setup/minikube/) locally, you can just follow the below script to reproduce this setup on your local machine. 
+
 #### Create Minikube Cluster 
 - `minikube start`
 
