@@ -40,14 +40,14 @@ As long as you have [Minikube installed](https://kubernetes.io/docs/setup/miniku
 #### Create Minikube Cluster 
 - `minikube start`
 
-#### Install router and open browser to UI 
-- `kube apply -f 00-test-bgp-router.v0.7.3.yaml`
-- `minikube service -n metallb-system test-bgp-router-ui`
-- `kube get pods --all-namespaces --watch`
+#### Install router and open browser to router UI 
+- `kube apply -f setup/00-test-bgp-router.v0.7.3.yaml`
+- (Optional) `minikube service -n metallb-system test-bgp-router-ui`
+- (Optional) `kube get pods --all-namespaces --watch`
 
 #### Install Calico and tail logs and examine peering
-- `kube apply -f 01-calico.yaml`
-- `kube exec <calico-node-id> -it sh --namespace kube-system`
+- `kube apply -f setup/01-calico.yaml`
+- (Optional) `minikube ssh`
 ```
     # Download the matching version
     curl -O -L  https://github.com/projectcalico/calicoctl/releases/download/v3.5.0/calicoctl
@@ -55,23 +55,27 @@ As long as you have [Minikube installed](https://kubernetes.io/docs/setup/miniku
     # Make it executable
     chmod +x calicoctl
 
-    # If you like you can move it to a valid PATH
-    mv calicoctl /usr/local/bin/calicoctl
-
     # Exmaine peering
-    sudo calico node status
+    sudo ./calicoctl node status
+```
+- (Optional) `kube logs -f <calico-node-id> -n kube-system | grep --line-buffered bird`
+- (Optional) `kube exec <calico-node-id> -it sh --namespace kube-system`
+```
+more /etc/calico/confd/config/bird.cfg
 ```
 
-- `kube logs -f <calico-node-id> -n kube-system`
-
 #### Configure Calico to Peer with Router and loopback
-`calicoctl apply -f 02-bgppeer-routers.yaml`
-`calicoctl apply -f 03-bgppeer-metallb.yaml`
+- `calicoctl apply -f setup/02-bgppeer-routers.yaml`
+- `calicoctl apply -f setup/03-bgppeer-metallb.yaml`
 
 #### Install MetalLB and Configure 
-- `kube apply -f 04-metallb.v0.7.3.yaml`
-- `kube apply -f 05-metallb-config.yaml`
-- `kube logs -f <speaker-id> -n metallb-system`
+- `kube apply -f setup/04-metallb.v0.7.3.yaml`
+- `kube apply -f setup/05-metallb-config.yaml`
+- (Optional) `kube logs -f <speaker-id> -n metallb-system`
 
 #### Install new service of type LoadBalancer 
-- `kube apply -f 06-service-loadbalancer.yaml`
+- `kube apply -f setup/06-service-loadbalancer.yaml`
+
+
+
+

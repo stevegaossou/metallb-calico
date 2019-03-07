@@ -4,5 +4,7 @@ metadata:
   name: minikube
 spec:
   bgp:
-    ipv4Address: 192.168.99.101/24
+    asNumber: 64512
+    ipv4Address: 192.168.99.102/24
+    # Use below to force source IP for calico node to be same as eth0
     # ipv4Address: 10.0.2.15/24
