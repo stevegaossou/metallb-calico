@@ -1,0 +1,19 @@
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: calico-to-bird
+spec:
+  peerIP: 10.96.0.100
+  asNumber: 64512
+  nodeSelector: all()
+
+# ---
+
+# apiVersion: projectcalico.org/v3
+# kind: BGPPeer
+# metadata:
+#   name: calico-to-quagga
+# spec:
+#   peerIP: 10.96.0.101
+#   asNumber: 64512
+#   nodeSelector: all()
