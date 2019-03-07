@@ -5,11 +5,27 @@ Trying to reproduce the following issue [#1603](https://github.com/projectcalico
 
 A good summary of the issue can also be found on the [official MetalLB documentation](https://metallb.universe.tf/configuration/calico/). 
 
+Below is a quick summary of the integration issue between Calico & MetalLB. 
+
+## MetalLB 
+A typical setup using MetalLB might look something like: 
+
+![screen shot 2019-03-06 at 4 28 33 pm](https://user-images.githubusercontent.com/18451894/53923428-2af64780-402d-11e9-8b1d-985a87486829.png)
+
+
 ## The Problem
-![Problem](https://mermaidjs.github.io/mermaid-live-editor/#/view/eyJjb2RlIjoiZ3JhcGggQlRcbiAgICBzdWJncmFwaCBcIlwiXG4gICAgICBtZXRhbGxiQVxuICAgICAgY2FsaWNvQVxuICAgIGVuZFxuICAgIHN1YmdyYXBoIFwiXCJcbiAgICAgIG1ldGFsbGJCXG4gICAgICBjYWxpY29CXG4gICAgZW5kXG4gICAgbWV0YWxsYkEoTWV0YWxMQjxicj5zcGVha2VyKS0uIFwiTEIgcm91dGVzPGJyPihkb2Vzbid0IHdvcmspXCIgLi0-cm91dGVyKEJHUCBSb3V0ZXIpXG4gICAgY2FsaWNvQShcIkNhbGljb1wiKS0tIENsdXN0ZXIgcm91dGVzIC0tPnJvdXRlclxuXG4gICAgbWV0YWxsYkIoTWV0YWxMQjxicj5zcGVha2VyKS0uIFwiTEIgcm91dGVzPGJyPihkb2Vzbid0IHdvcmspXCIgLi0-cm91dGVyXG4gICAgY2FsaWNvQihDYWxpY28pLS0gQ2x1c3RlciByb3V0ZXMgLS0-cm91dGVyXG5cbiAgICBzdHlsZSBtZXRhbGxiQSBmaWxsOiNjY2Ysc3Ryb2tlOiNmNjYsc3Ryb2tlLXdpZHRoOjJweCxzdHJva2UtZGFzaGFycmF5OiA1LCA1XG4gICAgc3R5bGUgbWV0YWxsYkIgZmlsbDojY2NmLHN0cm9rZTojZjY2LHN0cm9rZS13aWR0aDoycHgsc3Ryb2tlLWRhc2hhcnJheTogNSwgNVxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0)
+The problem occurs when each host also has Calico node installed. This means that both MetalLB and Calico will attempt to peer an external Router. 
+
+![screen shot 2019-03-06 at 4 27 37 pm](https://user-images.githubusercontent.com/18451894/53923371-f5515e80-402c-11e9-9239-5b6d7e8303b3.png)
 
 ## The Solution
-![Solution](https://mermaidjs.github.io/mermaid-live-editor/#/view/eyJjb2RlIjoiZ3JhcGggQlRcbiAgICBzdWJncmFwaCBcIlwiXG4gICAgICBtZXRhbGxiQVxuICAgICAgY2FsaWNvQVxuICAgIGVuZFxuICAgIHN1YmdyYXBoIFwiXCJcbiAgICAgIG1ldGFsbGJCXG4gICAgICBjYWxpY29CXG4gICAgZW5kXG4gICAgbWV0YWxsYkEoTWV0YWxMQjxicj5zcGVha2VyKS0uIFwicGVlcmluZyB0aHJvdWdoIDEyNy4wLjAuMVwiIC4tPmNhbGljb0FcbiAgICBjYWxpY29BKFwiQ2FsaWNvXCIpLS0gQ2x1c3RlciByb3V0ZXMgLS0-cm91dGVyKEJHUCBSb3V0ZXIpXG5cbiAgICBtZXRhbGxiQihNZXRhbExCPGJyPnNwZWFrZXIpLS4gXCJwZWVyaW5nIHRocm91Z2ggMTI3LjAuMC4xXCIgLi0-Y2FsaWNvQlxuICAgIGNhbGljb0IoQ2FsaWNvKS0tIENsdXN0ZXIgcm91dGVzIC0tPnJvdXRlclxuc3R5bGUgbWV0YWxsYkEgZmlsbDojY2NmLHN0cm9rZTojZjY2LHN0cm9rZS13aWR0aDoycHgsc3Ryb2tlLWRhc2hhcnJheTogNSwgNVxuc3R5bGUgbWV0YWxsYkIgZmlsbDojY2NmLHN0cm9rZTojZjY2LHN0cm9rZS13aWR0aDoycHgsc3Ryb2tlLWRhc2hhcnJheTogNSwgNVxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifX0)
+The most generic solution proposed on the [MetalLB ticket #114](https://github.com/google/metallb/issues/114#issuecomment-357547646) recomends having Calico peer with the external Router and MetalLB peer with Calico on the host. This can be done using the loopback IP (127.0.0.1). 
+
+![screen shot 2019-03-06 at 4 37 38 pm](https://user-images.githubusercontent.com/18451894/53923751-2f6f3000-402e-11e9-920d-0c9b677efc28.png)
+
+The only obstacle with this solution appears to be an issue where Calico node constantly attempts to peer with 127.0.0.1. If MetalLB is not ready then this leads to repeated connection errors. This causes Calico node to enter error backoff period, during which no real peering can occur. 
+
+The goal of this experiement was to verify that this error backoff happens. 
 
 ## Enviroment 
 - Calico version: `v3.5.2`
